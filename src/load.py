@@ -33,16 +33,23 @@ def load_customers(conn, customers):
 def load_orders(conn, orders):
     with conn.cursor() as cur:
         query = """
-            insert into sales.orders
-                (order_id, customer_id, amount, updated_at, is_deleted)
-            values
-                (%s, %s, %s, %s, False)
-            on conflict (order_id)
-            do update set
-                customer_id = excluded.customer_id,
-                amount = excluded.amount,
-                updated_at = excluded.updated_at,
-                is_deleted = False
+            INSERT INTO sales.orders (
+                order_id,
+                customer_id,
+                amount,
+                source_updated_at
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                %s
+            )
+            ON CONFLICT (order_id)
+            DO UPDATE SET
+                customer_id = EXCLUDED.customer_id,
+                amount = EXCLUDED.amount,
+                source_updated_at = EXCLUDED.source_updated_at
         """
 
         data = [
