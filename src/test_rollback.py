@@ -1,9 +1,14 @@
-from connection import get_connection
+from src.connection import get_connection
 
-def main():
-    try:
-        with get_connection() as conn:
+
+def test_transaction_rollback():
+    valid_order_id = 109
+    invalid_order_id = 110
+
+    with get_connection() as conn:
+        try:
             with conn.cursor() as cur:
+                # Insert pertama seharusnya valid.
                 cur.execute(
                     """
                     INSERT INTO sales.orders
@@ -11,13 +16,11 @@ def main():
                     VALUES
                         (%s, %s, %s)
                     """,
-                    (109, 3, 100000),
+                    (valid_order_id, 3, 100000),
                 )
 
-                print("Order 109 inserted.")
-
-                #Sengaja bikin gagal
-                #karena customer 999 tidak ada
+                # Insert kedua sengaja gagal karena
+                # customer_id 999 tidak ada.
                 cur.execute(
                     """
                     INSERT INTO sales.orders
@@ -25,15 +28,26 @@ def main():
                     VALUES
                         (%s, %s, %s)
                     """,
-                        (110, 999, 50000),
+                    (invalid_order_id, 999, 50000),
                 )
 
                 conn.commit()
 
-    except Exception as e:
-        print("Transaction failed!")
-        print(f"Error: {e}")
+        except Exception:
+            conn.rollback()
 
+    # Pastikan order 109 ikut ter-rollback.
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT order_id
+                FROM sales.orders
+                WHERE order_id = %s
+                """,
+                (valid_order_id,),
+            )
 
-if __name__ == "__main__":
-    main()
+            result = cur.fetchone()
+
+            assert result is None

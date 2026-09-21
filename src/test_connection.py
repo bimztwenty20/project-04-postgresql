@@ -1,13 +1,10 @@
-from connection import get_connection
+from src.connection import get_connection
 
-def main():
+
+def test_connection():
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT version();")
+            cur.execute("SELECT 1;")
             result = cur.fetchone()
 
-            print("Connection succesfully!!")
-            print(result[0])
-
-if __name__ == "__main__":
-    main()
+    assert result[0] == 1
