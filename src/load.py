@@ -37,19 +37,22 @@ def load_orders(conn, orders):
                 order_id,
                 customer_id,
                 amount,
-                source_updated_at
+                updated_at,
+                is_deleted
             )
             VALUES (
                 %s,
                 %s,
                 %s,
-                %s
+                %s,
+                FALSE
             )
             ON CONFLICT (order_id)
             DO UPDATE SET
                 customer_id = EXCLUDED.customer_id,
                 amount = EXCLUDED.amount,
-                source_updated_at = EXCLUDED.source_updated_at
+                updated_at = EXCLUDED.updated_at,
+                is_deleted = FALSE
         """
 
         data = [
